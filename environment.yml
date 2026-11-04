@@ -1,0 +1,17 @@
+name: my_analysis
+channels: [conda-forge, bioconda]
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - pyyaml
+  - matplotlib
+  - bcftools
+  - htslib
+  - plink        # 1.9, for --homozyg
+  - plink2
+  - admixture
+  - wget
+  - pip
+  - pip:
+      - snps==2.12.1

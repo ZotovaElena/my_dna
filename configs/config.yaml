@@ -1,0 +1,33 @@
+# Paths are relative to the project root; absolute paths are also supported.
+raw_file: MyHeritage_raw_dna_data.csv   # GRCh37, forward strand, low-pass WGS + imputation
+out_dir: outputs
+ref_dir: /mnt/c/Users/ezotova/Documents/MY/myheritage
+sample_id: me
+threads: 8
+
+# Ancestry
+admixture_refs: [AFR, EUR, EAS, SAS]    # 1000G superpops used as supervised ADMIXTURE references
+
+# Polygenic scores (https://www.pgscatalog.org), harmonised GRCh37 files
+pgs_ids:
+  - PGS000018   # coronary artery disease, metaGRS (Inouye 2018)
+  - PGS000004   # breast cancer, PRS313 (Mavaddat 2018)
+prs_superpop: EUR                       # reference distribution for percentiles
+
+pharmcat_image: pgkb/pharmcat:3.4.0
+
+# Single-SNP traits. Alleles are on the GRCh37 forward strand.
+traits:
+  rs4988235:  {trait: "Lactase persistence (LCT/MCM6 -13910)", effect_allele: A, effect: "lactase persistence (dominant)"}
+  rs12913832: {trait: "Eye colour (HERC2/OCA2)", effect_allele: G, effect: "GG → blue eyes likely"}
+  rs1426654:  {trait: "Skin pigmentation (SLC24A5 A111T)", effect_allele: A, effect: "lighter skin"}
+  rs1805007:  {trait: "Red hair / freckling (MC1R R151C)", effect_allele: T, effect: "red hair, fair skin"}
+  rs1815739:  {trait: "ACTN3 R577X", effect_allele: T, effect: "TT → no alpha-actinin-3 (endurance-type)"}
+  rs762551:   {trait: "Caffeine metabolism (CYP1A2*1F)", effect_allele: A, effect: "AA → fast metaboliser"}
+  rs713598:   {trait: "Bitter taste PTC (TAS2R38 A49P)", effect_allele: G, effect: "bitter taster"}
+  rs17822931: {trait: "Earwax / body odour (ABCC11)", effect_allele: T, effect: "TT → dry earwax, less body odour"}
+  rs671:      {trait: "Alcohol flush (ALDH2*2)", effect_allele: A, effect: "alcohol flush, acetaldehyde build-up"}
+  rs1801133:  {trait: "MTHFR C677T", effect_allele: A, effect: "AA → ~30% enzyme activity"}
+  rs4680:     {trait: "COMT Val158Met", effect_allele: A, effect: "Met allele, lower COMT activity"}
+  rs9939609:  {trait: "FTO obesity locus", effect_allele: A, effect: "+~0.4 kg/m² BMI per copy"}
+  rs7903146:  {trait: "TCF7L2 type 2 diabetes", effect_allele: T, effect: "~1.4× T2D risk per copy"}
