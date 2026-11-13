@@ -25,7 +25,8 @@ PUBMED_BATCH = 200
 CONCLUSION_LABEL = re.compile(r"conclu|interpret|significance|summary", re.IGNORECASE)
 
 FIELDS = [
-    "rsid", "mapped_genes", "genotype", "effect_allele", "effect_allele_copies",
+    "rsid", "mapped_genes", "genotype", "effect_allele", "reported_effect_allele",
+    "allele_flipped", "effect_allele_copies",
     "strand_ambiguous", "trait_label", "reported_trait", "category", "direction",
     "neg_log10_p", "pvalue_mantissa", "pvalue_exponent", "pvalue_description",
     "or_value", "beta", "ci_lower", "ci_upper", "risk_frequency",
@@ -487,14 +488,22 @@ function detailRow(d) {
   cell.append(el("p", { class: "explain", text: d.explanation || "" }));
   const snp = SNPS[d.rsid];
   if (snp) {
-    cell.append(el("p", { class: "small" }, el("b", { text: `About ${d.rsid}: ` }),
-      `${snp.trait || ""}${snp.effect_allele ? `. Best-known effect allele: ${snp.effect_allele}` : ""}` +
-      `${snp.effect ? ` (${snp.effect})` : ""}. This result may concern a different trait.`));
+    let mine = "";
+    const a = snp.effect_allele;
+    if (a && d.genotype && d.genotype !== "not genotyped") {
+      const n = [...d.genotype].filter((x) => x === a).length;
+      mine = ` You have ${n} cop${n === 1 ? "y" : "ies"} of ${a} (genotype ${d.genotype}).`;
+    }
+    cell.append(el("p", { class: "small" },
+      el("b", { text: `Best-known effect of ${d.rsid} (from your config): ` }),
+      `${snp.trait || ""}${a ? `. Allele ${a}: ${snp.effect || ""}` : ""}.${mine}`));
   }
   const dl = el("dl");
   const add = (k, v) => { if (v != null && v !== "") dl.append(el("dt", { text: k }), el("dd", {}, v)); };
   add("Allele’s effect", { higher: "▲ higher", lower: "▼ lower" }[d.direction] || "not reported");
   add("Reported trait", d.reported_trait);
+  if (d.allele_flipped === true)
+    add("Strand", `Reported as ${d.reported_effect_allele}, shown as ${d.effect_allele} on the forward strand`);
   add("p-value", fmtP(d) + (d.pvalue_description ? ` (${d.pvalue_description})` : ""));
   add("Effect", effectText(d) + (d.ci_lower != null ? `, 95% CI ${d.ci_lower}–${d.ci_upper}` : ""));
   add("Effect-allele frequency", d.risk_frequency);

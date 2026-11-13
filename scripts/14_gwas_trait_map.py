@@ -13,6 +13,7 @@ These are population-level associations, not personal risk estimates.
 """
 
 from pathlib import Path
+import re
 import textwrap
 
 import matplotlib.pyplot as plt
@@ -101,6 +102,8 @@ def effect_direction(row) -> str:
     return "unknown"
 
 
+# Traits scored on study-specific scales (e.g. eye colour 1-5) where "higher" has no fixed meaning.
+ARBITRARY_SCALE = re.compile(r"colou?r|pigmentation|strand of hair", re.IGNORECASE)
 SD_HINTS = ("inv-norm", "inverse norm", "standardi", "z-score", "z score", " sd", "(sd", "rank-based")
 
 
@@ -156,21 +159,28 @@ def interpret(row) -> tuple[str, str]:
     if not allele or pd.isna(copies):
         return "unclear", ("The study did not report which allele carries the effect, "
                            "so this can't be matched to your genotype.")
+    carry = (f"You don't carry {allele} (genotype {genotype})" if copies == 0 else
+             f"You carry {int(copies)} cop{'y' if copies == 1 else 'ies'} of {allele} (genotype {genotype})")
+    if str(getattr(row, "allele_flipped", "")).lower() == "true":
+        carry += (f"; the study reported it as {row.reported_effect_allele}, "
+                  f"the same allele named on the opposite DNA strand")
     if row.direction == "unknown":
-        return "unclear", (f"You carry {int(copies)} cop{'y' if copies == 1 else 'ies'} of {allele}, "
-                           f"but the study did not report the direction of its effect.")
+        return "unclear", f"{carry}, but the study did not report the direction of its effect."
+    if ARBITRARY_SCALE.search(row.trait_label):
+        return "unclear", (f"{carry}. This study scored {row.trait_label} on its own numeric "
+                           f"scale, so “higher” or “lower” can’t be translated into an actual "
+                           f"colour, and different studies use opposite scales. See the SNP’s "
+                           f"best-known effect for what your genotype usually means.")
 
     opposite = "lower" if row.direction == "higher" else "higher"
     if copies >= 1:
         verdict = f"toward {row.direction}"
-        text = (f"You carry {int(copies)} cop{'y' if copies == 1 else 'ies'} of {allele} "
-                f"(genotype {genotype}). In this study, {allele} was associated with "
-                f"{linked}.")
+        text = f"{carry}. In this study, {allele} was associated with {linked}."
     else:
         verdict = f"toward {opposite}"
-        text = (f"You don't carry {allele} (genotype {genotype}). In this study {allele} was "
-                f"associated with {linked}, so compared with carriers your genotype points "
-                f"toward {trait_phrase(row.trait_label, row.category, opposite)}.")
+        text = (f"{carry}. In this study {allele} was associated with {linked}, so compared "
+                f"with carriers your genotype points toward "
+                f"{trait_phrase(row.trait_label, row.category, opposite)}.")
     return verdict, text + size_note
 
 
@@ -319,7 +329,9 @@ def plot_carried(carried: pd.DataFrame, output: Path, per_category: int) -> None
         ax.text(-0.01, i, label, transform=ax.get_yaxis_transform(), ha="right",
                 va="center", color=MUTED, fontsize=8)
         ax.hlines(i, GENOME_WIDE * 0.8, item.neg_log10_p, color=GRID, linewidth=1, zorder=1)
-        ax.scatter(item.neg_log10_p, i, s=70, marker=DIRECTION_MARKERS[item.direction],
+        shown_direction = ("unknown" if ARBITRARY_SCALE.search(item.trait_label)
+                           else item.direction)
+        ax.scatter(item.neg_log10_p, i, s=70, marker=DIRECTION_MARKERS[shown_direction],
                    color=COPY_COLORS.get(int(item.effect_allele_copies), "#3987e5"),
                    edgecolors=SURFACE, linewidths=1.5, zorder=3)
 
@@ -333,7 +345,7 @@ def plot_carried(carried: pd.DataFrame, output: Path, per_category: int) -> None
         Line2D([], [], marker="v", linestyle="", markersize=8, color=MUTED,
                label="Allele linked to lower value / risk"),
         Line2D([], [], marker="o", linestyle="", markersize=8, color=MUTED,
-               label="Direction not reported"),
+               label="Direction not reported / study-specific scale"),
     ]
     ax.legend(handles=handles, frameon=False, fontsize=8, labelcolor=INK,
               loc="lower right", bbox_to_anchor=(1, 1.0), ncol=3)

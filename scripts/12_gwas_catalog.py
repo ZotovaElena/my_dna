@@ -20,12 +20,14 @@ from urllib3.util.retry import Retry
 from common import config_arg, load_config, load_myheritage
 
 API_URL = "https://www.ebi.ac.uk/gwas/rest/api/v2/associations"
+SNP_URL = "https://www.ebi.ac.uk/gwas/rest/api/v2/single-nucleotide-polymorphisms/{rsid}"
 PAGE_SIZE = 200
 COMPLEMENT = {"A": "T", "T": "A", "C": "G", "G": "C"}
 PALINDROMIC = ({"A", "T"}, {"C", "G"})
 
 COLUMNS = [
-    "rsid", "genotype", "effect_allele", "effect_allele_copies", "strand_ambiguous",
+    "rsid", "genotype", "effect_allele", "reported_effect_allele", "allele_flipped",
+    "effect_allele_copies", "strand_ambiguous",
     "efo_trait", "efo_id", "reported_trait", "neg_log10_p", "pvalue",
     "pvalue_mantissa", "pvalue_exponent", "pvalue_description",
     "or_value", "beta", "ci_lower", "ci_upper", "range", "risk_frequency",
@@ -118,6 +120,37 @@ def effect_allele(association: dict, rsid: str) -> str:
     return "/".join(alleles)
 
 
+def parse_alleles(text: str) -> set[str]:
+    """'G/A/C (forward)' -> {'G', 'A', 'C'}; reverse-strand listings are complemented."""
+    letters = {a for a in text.split("(")[0].replace(" ", "").split("/") if a in COMPLEMENT}
+    return {COMPLEMENT[a] for a in letters} if "reverse" in text.lower() else letters
+
+
+def snp_alleles(session: requests.Session, rsid: str, cache_dir: Path, refresh: bool) -> set[str]:
+    """Forward-strand alleles of an rsID from the catalog's SNP record (cached)."""
+    cache_file = cache_dir / f"{rsid}.snp.json"
+    if cache_file.exists() and not refresh:
+        record = json.loads(cache_file.read_text())
+    else:
+        response = session.get(SNP_URL.format(rsid=rsid), timeout=30)
+        if response.status_code == 404:
+            return set()
+        response.raise_for_status()
+        record = {"alleles": response.json().get("alleles", "")}
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps(record))
+    return parse_alleles(record.get("alleles") or "")
+
+
+def harmonise(allele: str, forward: set[str]) -> tuple[str, bool]:
+    """Flip an allele reported on the opposite strand (e.g. T for a G/A SNP)."""
+    if allele not in COMPLEMENT or not forward or allele in forward:
+        return allele, False
+    if COMPLEMENT[allele] in forward:
+        return COMPLEMENT[allele], True
+    return allele, False
+
+
 def allele_copies(genotype: str | None, allele: str) -> int | None:
     """Copies of a single-base effect allele in the genotype; None if undeterminable."""
     if not genotype or allele not in COMPLEMENT:
@@ -136,13 +169,18 @@ def join(values) -> str:
     return "; ".join(str(v) for v in values or [] if v not in (None, ""))
 
 
-def association_row(association: dict, rsid: str, genotype: str | None) -> dict:
-    allele = effect_allele(association, rsid)
+def association_row(
+    association: dict, rsid: str, genotype: str | None, forward: set[str]
+) -> dict:
+    reported = effect_allele(association, rsid)
+    allele, flipped = harmonise(reported, forward)
     efo = association.get("efo_traits") or []
     return {
         "rsid": rsid,
         "genotype": genotype or "not genotyped",
         "effect_allele": allele,
+        "reported_effect_allele": reported,
+        "allele_flipped": flipped,
         "effect_allele_copies": allele_copies(genotype, allele),
         "strand_ambiguous": is_strand_ambiguous(genotype, allele),
         "efo_trait": join(t.get("efo_trait") for t in efo),
@@ -196,7 +234,14 @@ def main() -> None:
             failed.append(rsid)
             continue
         print(f"{rsid}: {len(associations)} associations")
-        rows.extend(association_row(a, rsid, genotypes.get(rsid)) for a in associations)
+        try:
+            forward = snp_alleles(session, rsid, cache_dir, args.refresh)
+        except (requests.RequestException, ValueError) as exc:
+            print(f"WARNING: {rsid} alleles unavailable ({exc}); strand not harmonised",
+                  file=sys.stderr)
+            forward = set()
+        genotype = genotypes.get(rsid)
+        rows.extend(association_row(a, rsid, genotype, forward) for a in associations)
 
     table = pd.DataFrame(rows, columns=COLUMNS)
     table["effect_allele_copies"] = table["effect_allele_copies"].astype("Int64")
