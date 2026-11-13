@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from common import AUTOSOMES, config_arg, load_config, load_myheritage
+from common import AUTOSOMES, config_arg, is_het, load_config, load_myheritage
 
 # KING thresholds (Manichaikul et al. 2010)
 DEGREES = [(0.354, "duplicate / identical twin"), (0.177, "1st degree"), (0.0884, "2nd degree"),
@@ -30,8 +30,8 @@ def compare(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
     m = m[m["chrom"].isin(AUTOSOMES) & (m["genotype_a"].str.len() == 2) & (m["genotype_b"].str.len() == 2)]
     m = m[[len(set(x + y)) <= 2 for x, y in zip(m["genotype_a"], m["genotype_b"])]]
     ga, gb = m["genotype_a"], m["genotype_b"]
-    hom_a, hom_b = ga.str[0] == ga.str[1], gb.str[0] == gb.str[1]
-    return m.assign(het_a=~hom_a, het_b=~hom_b, opp_hom=hom_a & hom_b & (ga.str[0] != gb.str[0]))
+    het_a, het_b = is_het(ga), is_het(gb)
+    return m.assign(het_a=het_a, het_b=het_b, opp_hom=~het_a & ~het_b & (ga.str[0] != gb.str[0]))
 
 
 def kinship(m: pd.DataFrame) -> dict[str, float]:

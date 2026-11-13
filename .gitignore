@@ -62,6 +62,7 @@ wget-log*
 # Output files
 outputs/
 output/
+results/
 
 # data files
 corpus/

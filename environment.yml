@@ -1,16 +1,26 @@
 name: my_analysis
-channels: [conda-forge, bioconda]
+# nodefaults: mixing Anaconda's `defaults` channel with conda-forge broke Pillow (libtiff.so.5 vs .so.6)
+channels: [conda-forge, bioconda, nodefaults]
 dependencies:
   - python=3.11
   - pandas
   - numpy
   - pyyaml
   - matplotlib
+  - pillow
+  - seaborn       # notebook
+  - ipykernel     # notebook
+  - pysam         # notebook (CRAM header)
+  - samtools      # scripts/cram_qc.sh
   - bcftools
   - htslib
-  - plink        # 1.9, for --homozyg
+  - plink         # 1.9, for --homozyg
   - plink2
-  - admixture
+  - admixture     # static 2018 binary; on WSL2 needs vsyscall=emulate (see README)
+  - glimpse-bio   # GLIMPSE2, low-pass imputation from the CRAM
+  - admixtools    # qpAdm, convertf (scripts/12_aadr_prepare.py, 13_qpadm.py)
+  - sequencetools # pileupCaller: pseudo-haploid calls from the CRAM at AADR SNPs
+  - aria2         # parallel downloads in scripts/download_1kg.sh
   - wget
   - pip
   - pip:

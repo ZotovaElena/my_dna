@@ -12,7 +12,7 @@ from itertools import takewhile
 
 import pandas as pd
 
-from common import AUTOSOMES, config_arg, load_config
+from common import AUTOSOMES, config_arg, load_config, load_panel
 
 PGS_URL = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/{id}/ScoringFiles/Harmonized/{id}_hmPOS_GRCh37.txt.gz"
 
@@ -55,8 +55,7 @@ def main() -> None:
     cfg = load_config(args.config)
     out = cfg["out_dir"] / "prs"
     out.mkdir(exist_ok=True)
-    panel = pd.read_csv(cfg["ref_dir"] / "1kg" / "integrated_call_samples_v3.20130502.ALL.panel",
-                        sep="\t", usecols=["sample", "super_pop"])
+    panel = load_panel(cfg)
     ref_ids = set(panel.loc[panel["super_pop"] == cfg["prs_superpop"], "sample"])
 
     rows = []

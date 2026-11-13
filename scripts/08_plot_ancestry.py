@@ -2,14 +2,11 @@
 
 import json
 
-import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from common import config_arg, load_config  # noqa: E402
+from common import config_arg, load_config, load_panel
 
 POP_NAMES = {
     "ACB": "African Caribbean (Barbados)", "ASW": "African American (SW USA)", "ESN": "Esan (Nigeria)",
@@ -28,8 +25,7 @@ SURFACE, INK, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#898781", "#e1e0d9"
 def load_pcs(cfg: dict) -> tuple[pd.DataFrame, list[str]]:
     out = cfg["out_dir"]
     pcs = pd.read_csv(out / "ancestry.eigenvec", sep="\t").rename(columns=lambda c: c.lstrip("#"))
-    panel = pd.read_csv(cfg["ref_dir"] / "1kg" / "integrated_call_samples_v3.20130502.ALL.panel",
-                        sep="\t", usecols=["sample", "pop", "super_pop"])
+    panel = load_panel(cfg)[["sample", "pop", "super_pop"]]
     pc_cols = [c for c in pcs.columns if c.startswith("PC")]
     return pcs.merge(panel, left_on="IID", right_on="sample", how="left"), pc_cols
 
@@ -79,6 +75,8 @@ def plot(pcs: pd.DataFrame, me: pd.Series, path) -> None:
 
 
 def main() -> None:
+    # Headless when run as a script; importing the module (e.g. from the notebook) keeps the inline backend.
+    plt.switch_backend("Agg")
     args = config_arg(__doc__).parse_args()
     cfg = load_config(args.config)
     out = cfg["out_dir"]

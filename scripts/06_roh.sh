@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Runs of homozygosity (plink 1.9). F_ROH ≈ 1/16 for first-cousin parents, ≈ 1/64 for second cousins.
-set -euo pipefail
-cd "$(dirname "$0")/.."
-OUT=$(python scripts/common.py out_dir)
+source "$(dirname "$0")/env.sh"
 
 plink --vcf "$OUT/sample.grch37.vcf.gz" --double-id --chr 1-22 \
   --homozyg --homozyg-kb 1000 --homozyg-snp 100 --out "$OUT/roh"

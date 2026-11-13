@@ -4,7 +4,7 @@ import json
 
 import pandas as pd
 
-from common import AUTOSOMES, config_arg, is_het, load_config, load_myheritage, read_header
+from common import AUTOSOMES, config_arg, is_called, is_het, load_config, load_myheritage, read_header
 
 # GRCh37 pseudo-autosomal regions; excluded so males show ~0 X heterozygosity
 PARS = [(60_001, 2_699_520), (154_931_044, 155_260_560)]
@@ -22,7 +22,7 @@ def main() -> None:
     cfg = load_config(args.config)
 
     df = load_myheritage(cfg["raw_file"], drop_nocalls=False)
-    called = df["genotype"].str.fullmatch(r"[ACGT]{1,2}", na=False)
+    called = is_called(df["genotype"])
     calls = df[called]
     auto = calls[calls["chrom"].isin(AUTOSOMES)]
     x = calls[calls["chrom"] == "X"]

@@ -1,12 +1,206 @@
 # Paths are relative to the project root; absolute paths are also supported.
-raw_file: MyHeritage_raw_dna_data.csv   # GRCh37, forward strand, low-pass WGS + imputation
+raw_file: /mnt/d/My_DNA/MyHeritage_raw_dna_data.csv   # GRCh37, forward strand, low-pass WGS + imputation
 out_dir: outputs
-ref_dir: /mnt/c/Users/ezotova/Documents/MY/myheritage
+ref_dir: /mnt/d/My_DNA
+cram: /mnt/d/My_DNA/MyHeritage_full_sequencing.cram           # low-pass WGS reads (Ultima, ~1.9x)
+reference_fasta: /mnt/d/My_DNA/reference/Homo_sapiens_assembly19.fasta   # Broad b37, the CRAM's reference
+ancient_dir: /mnt/e/My_DNA_ancient   # ancient BAMs/CRAMs for ancIBD (~45 GB; external USB disk E:)
 sample_id: me
 threads: 8
 
 # Ancestry
 admixture_refs: [AFR, EUR, EAS, SAS]    # 1000G superpops used as supervised ADMIXTURE references
+
+# qpAdm with the Allen Ancient DNA Resource (scripts/download_aadr.sh, 12_aadr_prepare.py, 13_qpadm.py)
+aadr:
+  prefix: aadr/v66.p1_HO.aadr.patch.PUB  # under ref_dir, without .geno/.snp/.ind
+  # Short name used in the models -> AADR group labels (3rd column of the .ind), pooled into one group.
+  # Verified against v66.p1 (no .HO/.DG suffixes in this release); n = samples.
+  # Check with `python scripts/12_aadr_prepare.py check`, search with `... find Udmurt Yamnaya`.
+  groups:
+    # modern, Human Origins array
+    Russian: [Russian]                                    # 98, mixed regions
+    Ukrainian: [Ukrainian, Ukrainian_North]               # 13 + 8
+    Mordovian: [Mordovian]                                # 32
+    Udmurt: [Udmurt]                                      # 10
+    Komi: [Komi_Zyrian]                                   # 10
+    Karelian: [Karelian]                                  # 14 (Mari has 1 sample in v66, so not used)
+    Finnish: [Finnish]                                    # 17
+    Nganasan: [Nganasan]                                  # 33, East Eurasian (Siberian) source
+    Belarusian: [Belarusian]                              # 10
+    Lithuanian: [Lithuanian]                              # 10, Baltic
+    Estonian: [Estonian]                                  # 12, Finnic
+    Veps: [Veps]                                          # 10, Finnic (NW Russia)
+    Chuvash: [Chuvash]                                    # 14, Volga, Turkic-speaking
+    Tatar_Kazan: [Tatar_Kazan]                            # 13, Volga
+    Tatar_Mishar: [Tatar_Mishar]                          # 10, Volga
+    Bashkir: [Bashkir]                                    # 55, southern Urals
+    Hungarian: [Hungarian]                                # 22, Central Europe
+    Czech: [Czech]                                        # 11, Central Europe (West Slavic)
+    # Polish (1), Mari (1) and Saami (3) are too small; no separate Erzya/Moksha in v66
+    # ancient sources
+    WHG: [Luxembourg_Loschbour_Mesolithic, France_Mesolithic]   # 2 + 18, ~8.0-8.5 kya
+    EHG: [Russia_Karelia_Mesolithic]                      # 16, ~8.1 kya
+    Anatolia_N: [Turkey_N]                                # 68, ~8.2 kya
+    Yamnaya: [Russia_Samara_EBA_Yamnaya]                  # 46, ~4.9 kya
+    CordedWare: [Czechia_EBA_CordedWare]                  # 48, ~4.5 kya (~355k SNPs each)
+    EarlySlav: [Czechia_EarlyMedieval_EarlySlav, Croatia_EarlyMedieval_EarlySlav]  # 3 + 2, ~1.2 kya
+    # Poland_EarlySlav (25) left out: only ~62k SNPs each
+    # outgroups ("right" populations)
+    Mbuti: [Mbuti]                                        # 25
+    Ust_Ishim: [Russia_UstIshim_IUP]                      # 1, ~44 kya
+    Kostenki: [Russia_Kostenki_UP]                        # 3, ~36 kya
+    MA1: [Russia_Malta_UP]                                # 1, ~24 kya
+    Han: [Han]                                            # 153
+    Papuan: [Papuan]                                      # 46
+    Karitiana: [Karitiana]                                # 28
+    Natufian: [Israel_Natufian]                           # 17, low coverage (~48k SNPs each)
+    Iran_N: [Iran_GanjDareh_N]                            # 17
+    # extra modern outgroups for modern_rotate: each pulls along a different ancestry axis
+    Sardinian: [Sardinian]                                # 58, farmer-rich
+    Basque: [Basque]                                      # 54, farmer + WHG, western
+    Norwegian: [Norwegian]                                # 12, NW Europe
+    Georgian: [Georgian]                                  # 24, Caucasus (CHG-rich)
+    BedouinB: [BedouinB]                                  # 40, Levant / Arabia
+    Kalash: [Kalash]                                      # 41, steppe-rich South Asia
+    Mansi: [Mansi]                                        # 10, Ob-Ugric (Uralic), East Eurasian
+    Yakut: [Yakut]                                        # 42, Siberian Turkic
+    # candidate sources for the East Eurasian (Nganasan-related) component (scripts/23_qpadm_east.py)
+    BOO: [Russia_BolshoyOleniyOstrov_MBA]                 # 11, ~3.7 kya Kola, earliest Siberian-ancestry NE Europeans
+    Levanluhta: [Finland_Levanluhta]                      # 4, ~1.4 kya Iron Age Finland, Saami-like
+    Saami_Historic: [Russia_ChalmnyVarre_Historic]        # 2, ~150 years ago, Kola Saami
+    Khanty: [Khanty]                                      # 10, Ob-Ugric (Uralic)
+    Selkup: [Selkup]                                      # 24, Samoyedic (Uralic)
+    WSHG: [Russia_Tyumen_EN_Mesolithic]                   # 5, ~7.8 kya West Siberian hunter-gatherers
+    Botai: [Kazakhstan_Botai_Eneolithic]                  # 5, ~5.3 kya
+    Baikal_EN: [Russia_Irkutsk_EN]                        # 14, ~7.6 kya Lake Baikal
+    Krasnoyarsk_MLBA: [Russia_KrasnoyarskKrai_MLBA]       # 21, ~3.6 kya, Siberian + steppe
+    SeimaTurbino: [Russia_Omsk_EMBA_Irtysh_SeimaTurbino, Russia_Omsk_EMBA_Irtysh_SeimaTurbino-1,
+                   Russia_Omsk_EMBA_Irtysh_SeimaTurbino-2]  # 9, ~3.9 kya
+    Chiyalik: [Russia_Udmurtia_Medieval_LateChiyalik, Russia_Bashkortostan_Medieval_LateChiyalik,
+               Russia_Tatarstan_Medieval_EarlyChiyalik]   # 26, ~0.65-0.8 kya, Volga-Ural (Magyar-related)
+    EarlyBulgar: [Russia_Tatarstan_EarlyMedieval_EarlyBulgar]   # 7, ~0.95 kya Volga Bulgars
+    Khazar: [Russia_Samara_Khazar]                        # 8, ~1.2 kya
+    GoldenHorde: [Ukraine_GoldenHorde_LateMedieval, Kazakhstan_GoldenHorde]   # 7, ~0.6 kya
+    Conqueror: [Hungary_Conqueror, Hungary_Elite_Conqueror, Hungary_Conqueror_Commoner]   # 47, ~1.0 kya
+    Avar_EastAsian: [Hungary_EarlyAvar-oHighEastAsia, Hungary_LateAvar-oHighEastAsia]     # 88, ~1.2-1.3 kya
+    Mongol_LateMed: [Mongolia_Sukhbaatar_LateMedieval]   # 10, ~0.7 kya, Mongol Empire period
+
+qpadm:
+  targets: [me_cram, me_csv]   # added by 12_aadr_prepare.py: pseudo-haploid from the CRAM, imputed CSV
+  p_min: 0.01                  # a model fits if p >= p_min and every weight is within [0, 1]
+  jobs: 6                      # parallel qpAdm runs: each is single-threaded, ~2.3 min and ~450 MB RAM
+  analyses:
+    # Every combination of 1..max_sources sources is tested against the same right set.
+    modern:   # does a Uralic/Volga source improve on Slavic-only models, and which one fits?
+      sources: [Russian, Ukrainian, Mordovian, Udmurt, Komi, Karelian, Finnish]
+      max_sources: 3
+      right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N,
+              WHG, EHG, Anatolia_N, Yamnaya, Nganasan]
+    deep:     # proportions from the deep European ancestry streams plus an East Eurasian (Siberian) one
+      sources: [WHG, EHG, Anatolia_N, Yamnaya, Nganasan]
+      max_sources: 4
+      right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N]
+    modern_wide:   # is the non-Slavic signal Baltic, Finnic, Volga-Turkic or Central European?
+      sources: [Russian, Belarusian, Ukrainian, Czech, Hungarian, Lithuanian, Estonian, Veps,
+                Mordovian, Chuvash, Tatar_Kazan, Tatar_Mishar, Bashkir]
+      max_sources: 2   # 13 + 78 = 91 models per target
+      right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N,
+              WHG, EHG, Anatolia_N, Yamnaya, Nganasan]
+    modern_rotate:   # head to head: the candidates not in a model join the outgroups (rotating design)
+      sources: [Russian, Belarusian, Ukrainian, Czech, Lithuanian, Estonian, Mordovian, Chuvash,
+                Tatar_Kazan, Bashkir]
+      max_sources: 2   # 10 + 45 = 55 models
+      rotate: true
+      targets: [me_cram]   # the CSV fails nearly everything already
+      right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N,
+              WHG, EHG, Anatolia_N, Yamnaya, Nganasan,
+              Sardinian, Basque, Norwegian, Georgian, BedouinB, Kalash, Mansi, Yakut]
+    proximal:      # closer-in-time sources: Corded Ware (steppe + farmer) and Early Slavs
+      sources: [CordedWare, EarlySlav, Anatolia_N, WHG, EHG, Nganasan]
+      max_sources: 3   # 6 + 15 + 20 = 41 models per target
+      right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N]
+
+# "Ancient matches" like GEDmatch's archaic chart, with controls (scripts/15_ibs_ancient.py).
+# Half-identical segments (no opposite homozygote) between diploid moderns and ancient genomes on the AADR
+# HO SNPs, GRCh37 genetic map from the AADR .snp file. If people of every ancestry "match" the same ancient
+# individuals, the chart measures the ancient genome's data (coverage, pseudo-haploid calls), not kinship.
+ibs:
+  min_cm: 7          # GEDmatch-like thresholds
+  min_snps: 500
+  ancient_groups: [WHG, EHG, Anatolia_N, Yamnaya, CordedWare, EarlySlav, Natufian, Iran_N]   # from aadr.groups
+  ancient_ids: [     # famous genomes on the GEDmatch chart; .DG/.SG = high-coverage shotgun, .AG = capture
+    Ust_Ishim.DG, Kostenki14.SG, Sunghir3.SG, MA1.SG, Bichon.SG, KK1.SG, SATP.SG,
+    Loschbour.DG, Loschbour.AG, LaBrana1.SG, LaBrana1.AG, Stuttgart.AG, NE1.AG, Iceman.SG,
+    Inuk.SG, Anzick.SG, kennewick.SG, AltaiNeanderthal.DG, Vindija.DG, Chagyrskaya8.DG, Denisova3.DG]
+  controls_1kg: {FIN: 5, GBR: 5, TSI: 5, CHB: 5, JPT: 5, PJL: 5, PEL: 5, YRI: 5, LWK: 5}   # samples per population
+  controls_aadr: {Russian: 5, Han: 5, Mbuti: 5}   # HO-array moderns, same SNP panel as the ancients
+
+# Real IBD with ancient genomes: ancIBD (Ringbauer et al. 2024) on GLIMPSE2-imputed genomes (16_glimpse.sh,
+# 17_ancibd.py, download_ancient_bams.sh). Ancient shotgun genomes picked from the AADR annotation; the BAMs
+# come from ENA (the project is in the annotation's repository column). Expect little or nothing beyond
+# ~1,000-1,500 years: real shared segments decay fast.
+ancibd:
+  max_age_bp: 1500
+  min_depth: 0.5          # ancIBD needs >= ~0.25x; 0.5x leaves a margin
+  box: {min_lat: 45, min_lon: 12, max_lon: 60}   # Eastern/Central Europe (drops Siberia, Chukotka, Caucasus)
+  per_country: {Ukraine: 12, Russia: 12, Poland: 8, Lithuania: 3, Estonia: 3, Croatia: 2}   # youngest first
+  min_cm: 8               # reported threshold (ancIBD's recommendation for imputed ancient data)
+  min_cm_call: 6          # ancIBD calls down to this; 8-12 cM are then counted in the summary
+  runs: [me, ancient]     # GLIMPSE runs (ref_dir/glimpse/runs/<name>) merged per chromosome
+  ancient_pairs: true     # also ancient x ancient pairs, to calibrate what related ancients look like
+
+# f4(Mbuti, X; Ukrainian, you) (scripts/19_f4_uralic.py): positive when you share more drift with X than
+# Ukrainians do. Labels are AADR .ind groups. `controls` are AADR moderns tested in your place (one random
+# allele per SNP, like your CRAM calls) to show what a typical Eastern European gets.
+f4:
+  outgroup: [Mbuti]
+  baseline: [Ukrainian, Ukrainian_North]
+  # Second left population: with a European instead of Mbuti on the left, drift all Europeans share cancels,
+  # so genotype errors in your low-coverage calls can only weaken a signal, not create one
+  contrast: {name: Early Slavs (Poland), labels: [Poland_EarlyMedieval_Slav]}
+  controls: {Russian: 10, Belarusian: 5, Ukrainian: 5}
+  tests:
+    Siberian and Uralic:
+      Nganasan: [Nganasan]
+      Mansi: [Mansi]
+      Khanty: [Khanty]
+      Selkup: [Selkup]
+      Saami: [Saami]
+      Bolshoy Oleni Ostrov (MBA): [Russia_BolshoyOleniyOstrov_MBA]
+      Levänluhta (Iron Age Finland): [Finland_Levanluhta, Finland_Levanluhta-2]
+    Medieval Volga-Ural:
+      Chiyalik, Udmurtia: [Russia_Udmurtia_Medieval_LateChiyalik]
+      Chiyalik, Bashkortostan: [Russia_Bashkortostan_Medieval_LateChiyalik]
+      Chiyalik, Tatarstan: [Russia_Tatarstan_Medieval_EarlyChiyalik]
+      Early Bulgars, Tatarstan: [Russia_Tatarstan_EarlyMedieval_EarlyBulgar]
+      Karayakupovo: [Russia_Bashkortostan_EarlyMedieval_Karayakupovo, Russia_Tatarstan_EarlyMedieval_Karayakupovo]
+      Hungarian Conquerors: [Hungary_Conqueror, Hungary_Elite_Conqueror, Hungary_Conqueror_Commoner]
+    Modern Uralic and Volga:
+      Udmurt: [Udmurt]
+      Komi: [Komi_Zyrian]
+      Mordovian: [Mordovian]
+      Karelian: [Karelian]
+      Finnish: [Finnish]
+      Estonian: [Estonian]
+      Veps: [Veps]
+      Chuvash: [Chuvash]
+      Tatar (Kazan): [Tatar_Kazan]
+      Bashkir: [Bashkir]
+    Slavic and Baltic:
+      Early Slavs, Poland: [Poland_EarlyMedieval_Slav]
+      Early Slavs, Czechia/Croatia: [Czechia_EarlyMedieval_EarlySlav, Croatia_EarlyMedieval_EarlySlav]
+      Old Rus, Ivanovo: [Russia_Ivanovo_EarlyMedieval, Russia_Ivanovo_Medieval]
+      Old Rus, Vladimir/Viking: [Russia_Vladimir_Medieval, Russia_Vladimir_LateMedieval_OldRus, Russia_EarlyMedieval_Viking_OldRus]
+      Early Medieval Ukraine: [Ukraine_EarlyMedieval]
+      Russian: [Russian]
+      Belarusian: [Belarusian]
+      Lithuanian: [Lithuanian]
+    Deep sources:
+      WHG: [Luxembourg_Loschbour_Mesolithic, France_Mesolithic]
+      EHG: [Russia_Karelia_Mesolithic]
+      Anatolia_N: [Turkey_N]
+      Yamnaya: [Russia_Samara_EBA_Yamnaya]
 
 # Polygenic scores (https://www.pgscatalog.org), harmonised GRCh37 files
 pgs_ids:
@@ -14,7 +208,7 @@ pgs_ids:
   - PGS000004   # breast cancer, PRS313 (Mavaddat 2018)
 prs_superpop: EUR                       # reference distribution for percentiles
 
-pharmcat_image: pgkb/pharmcat:3.4.0
+# PharmCAT: jar + positions in ref_dir/pharmcat/ (scripts/download_pharmcat.sh), run by 10_pharmcat.sh
 
 # Single-SNP traits. Alleles are on the GRCh37 forward strand.
 traits:
@@ -31,3 +225,61 @@ traits:
   rs4680:     {trait: "COMT Val158Met", effect_allele: A, effect: "Met allele, lower COMT activity"}
   rs9939609:  {trait: "FTO obesity locus", effect_allele: A, effect: "+~0.4 kg/m² BMI per copy"}
   rs7903146:  {trait: "TCF7L2 type 2 diabetes", effect_allele: T, effect: "~1.4× T2D risk per copy"}
+
+# Farmer ancestry seen directly (scripts/21_farmer_f4.py). f4(outgroup, farmer; baseline, test) > 0: the test
+# shares more drift with Anatolian farmers than the baseline (which lacks farmer ancestry) does. Groups are the
+# short names of aadr.groups / the merged dataset. Control individuals get one random allele per SNP like you.
+farmer:
+  outgroup: Mbuti
+  farmer: Anatolia_N
+  baselines: [EHG, WHG, Yamnaya]
+  test_groups: [Sardinian, Basque, Hungarian, Czech, Ukrainian, Belarusian, Russian, Lithuanian, Mordovian,
+                Finnish, Estonian, Nganasan, CordedWare, EarlySlav]
+  control_individuals: {Sardinian: 10, Russian: 10, Ukrainian: 10, Nganasan: 10}
+  # Admixture f3(target; A, B) < 0 shows target = mix of A and B. Needs a heterozygosity correction, so only
+  # diploid populations are targets, never your pseudo-haploid genome.
+  admix_f3:
+    targets: [Russian, Ukrainian, Belarusian, Mordovian, Hungarian, Czech, Sardinian]
+    pairs: [[Anatolia_N, Yamnaya], [Anatolia_N, EHG], [Anatolia_N, WHG], [WHG, Yamnaya]]
+
+# West Eurasian PCA from modern Human Origins samples, ancient genomes and you projected by least squares
+# (like smartpca lsqproject: YES), scripts/22_pca_ancient.py. Labels are AADR .ind group labels.
+pca_ancient:
+  max_per_pop: 25
+  modern: [Sardinian, Basque, Spanish, French, Italian_North, Italian_South, Sicilian, Maltese, Greek, Albanian,
+           Bulgarian, Romanian, Hungarian, Czech, Croatian, English, Scottish, Icelandic, Norwegian, Orcadian,
+           Finnish, Estonian, Lithuanian, Belarusian, Ukrainian, Ukrainian_North, Russian, Mordovian, Chuvash,
+           Tatar_Kazan, Tatar_Mishar, Bashkir, Udmurt, Komi_Zyrian, Karelian, Veps, Georgian, Armenian,
+           Abkhasian, Adygei, Chechen, Lezgin, Ossetian, Balkar, Turkish, Iranian, Druze, Lebanese, Jordanian,
+           Palestinian, BedouinB, Cypriot, Syrian, Kurd]
+  ancient:   # display name -> AADR labels
+    WHG: [Luxembourg_Loschbour_Mesolithic, France_Mesolithic, Serbia_IronGates_Mesolithic]
+    EHG: [Russia_Karelia_Mesolithic]
+    Anatolia_N: [Turkey_N]
+    Europe_EN (LBK): [Austria_N_LBK, Slovakia_N_LBK]
+    Yamnaya: [Russia_Samara_EBA_Yamnaya]
+    Corded Ware: [Czechia_EBA_CordedWare]
+    Bell Beaker: [Czechia_BellBeaker]
+    Sintashta: [Russia_Chelyabinsk_MLBA_Sintashta]
+    Scythian (Ukraine): [Ukraine_LIA_Scythian]
+    Early Slavs: [Poland_EarlyMedieval_Slav, Czechia_EarlyMedieval_EarlySlav, Croatia_EarlyMedieval_EarlySlav]
+    Viking (Sweden): [Sweden_Viking]
+    Iran_N: [Iran_GanjDareh_N]
+    Natufian: [Israel_Natufian]
+  max_per_ancient: 40
+  min_snps: 30000
+
+# Which population carries the East Eurasian (Nganasan-related) component? (scripts/23_qpadm_east.py)
+# Each candidate replaces Nganasan in the proximal models (fit, p, weight). Then head to head: for every
+# ordered pair, "base + A" with B added to the outgroups fits only if A explains the target at least as well
+# as B does (B shares no extra drift with the target beyond what A provides).
+east:
+  targets: [me_cram, Russian]       # Russian as a population-level comparison
+  bases: [[EarlySlav], [EarlySlav, EHG]]
+  compete_base: [EarlySlav, EHG]    # base used for the head-to-head
+  null_target: Czech                # outgroup check: must still fit compete_base with B on the right
+  right: [Mbuti, Ust_Ishim, Kostenki, MA1, Han, Papuan, Karitiana, Natufian, Iran_N]
+  candidates:
+    Uralic and northern: [Nganasan, BOO, Levanluhta, Saami_Historic, Mansi, Khanty, Selkup]
+    Deep Siberian: [WSHG, Botai, Baikal_EN, Krasnoyarsk_MLBA, SeimaTurbino, Yakut]
+    Medieval steppe and Volga: [Chiyalik, EarlyBulgar, Khazar, GoldenHorde, Conqueror, Avar_EastAsian, Mongol_LateMed]

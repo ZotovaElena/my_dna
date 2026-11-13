@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 # Subset 1000G to the sample's sites, encode the sample on 1000G alleles, merge into one plink2 fileset.
-set -euo pipefail
-cd "$(dirname "$0")/.."
-OUT=$(python scripts/common.py out_dir)
-REF=$(python scripts/common.py ref_dir)
-THREADS=$(python scripts/common.py threads)
+source "$(dirname "$0")/env.sh"
 mkdir -p "$OUT/1kg"
 
 python scripts/04_make_vcf.py sites
 for c in {1..22}; do
   bcftools view -R "$OUT/sample_sites.tsv" -m2 -M2 -v snps --threads "$THREADS" \
-    -Oz -o "$OUT/1kg/chr$c.vcf.gz" "$REF"/1kg/ALL.chr$c.phase3_*.vcf.gz
+    -Oz -o "$OUT/1kg/chr$c.vcf.gz" "$REF/1kg/$(kg_vcf "$c")"
 done
 bcftools concat --threads "$THREADS" -Oz -o "$OUT/1kg_subset.vcf.gz" "$OUT"/1kg/chr{1..22}.vcf.gz
 bcftools index -t "$OUT/1kg_subset.vcf.gz"
