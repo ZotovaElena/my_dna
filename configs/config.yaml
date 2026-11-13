@@ -1,5 +1,5 @@
 # Paths are relative to the project root; absolute paths are also supported.
-raw_file: MyHeritage_raw_dna_data.csv   # GRCh37, forward strand, low-pass WGS + imputation
+raw_file: data/MyHeritage_raw_dna_data.csv   # GRCh37, forward strand, low-pass WGS + imputation
 out_dir: outputs
 ref_dir: /mnt/c/Users/ezotova/Documents/MY/myheritage
 sample_id: me
