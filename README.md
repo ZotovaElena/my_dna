@@ -14,6 +14,12 @@ mamba env create -f environment.yml && conda activate my_analysis
 # No references needed
 python scripts/01_qc.py                 # call rate, heterozygosity, inferred sex
 python scripts/02_traits.py [--apoe]    # single-SNP traits
+python scripts/12_gwas_catalog.py       # GWAS Catalog associations for configured traits
+python scripts/12_gwas_catalog.py --rsid rs12913832 rs4988235  # selected rsIDs
+python scripts/12_gwas_catalog.py --refresh  # re-download instead of using outputs/gwas_cache/
+python scripts/13_plot_gwas_catalog.py [--top 20 --per-rsid 3]  # outputs/gwas_catalog_associations.png
+python scripts/14_gwas_trait_map.py [--per-category 5]  # trait categories + traits linked to alleles you carry
+python scripts/15_gwas_explorer.py      # outputs/gwas_explorer.html: offline, filterable table of all associations
 
 # References: 1000 Genomes (~15 GB, verified + resumable) and ClinVar; safe to rerun
 bash scripts/00_download_refs.sh        # or only 1000G: bash scripts/download_1kg.sh [chroms...]
@@ -100,4 +106,5 @@ Python scripts share `scripts/common.py`.
   every file with `bgzip -t` before and after moving it.
 
 Caveats: rare variants from imputed/array data are often wrong; PRS percentiles depend on ancestry match;
-this is not a medical test.
+GWAS associations are population-level findings, not personal medical predictions. The GWAS Catalog
+script sends rsIDs only (not genotypes) to its public API. These analyses are not medical tests.

@@ -25,3 +25,4 @@ dependencies:
   - pip
   - pip:
       - snps==2.12.1
+      - requests
