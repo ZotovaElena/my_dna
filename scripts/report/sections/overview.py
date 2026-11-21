@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from report.core import esc, pct, read_json
+from report.core import MODULE_ACCENT, esc, icon, pct, read_json
 from report.sections.drugs import load_pharmcat, pgx_actionable
 from report.sections.f3 import f3_groups
 from report.sections.qpadm import deep_best
@@ -122,7 +122,9 @@ def module_cards(fa: dict[str, list[tuple[str, str]]], titles: dict[str, str]) -
             continue
         rows = "".join(f'<div class="fact"><span>{esc(k)}</span><b>{esc(v)}</b></div>' for k, v in fa[m]) or \
             '<div class="muted">No results yet.</div>'
-        cards.append(f'<a class="card mod" href="{m}.html"><h3>{esc(titles[m])} <span class="go">→</span></h3>'
+        acc_l, acc_d = MODULE_ACCENT[m]
+        cards.append(f'<a class="card mod" href="{m}.html" style="--acc-l:{acc_l};--acc-d:{acc_d}">'
+                     f'<h3><span class="mod-ico">{icon(m)}</span>{esc(titles[m])} <span class="go">→</span></h3>'
                      f'<div class="card-sub">{esc(about)}</div>{rows}</a>')
     return f'<div class="mods">{"".join(cards)}</div>'
 

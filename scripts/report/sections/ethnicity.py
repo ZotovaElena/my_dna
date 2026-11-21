@@ -31,8 +31,9 @@ def load_pca(cfg: dict):
 
 
 def pca_svg(pcs: pd.DataFrame, me: pd.Series, x: str, y: str, subset=None, label_by: str = "super_pop",
-            highlight: str | None = None, title: str = "") -> str:
-    """Scatter of reference samples (gray, or one group in slot 1) with group labels at centroids and you."""
+            highlight: str | None = None, title: str = "", colors: dict[str, int] | None = None) -> str:
+    """Scatter of reference samples (gray, or one group in slot 1, or coloured by label_by group via colors:
+    group -> slot) with group labels at centroids and you."""
     ref = pcs.dropna(subset=["pop"])
     if subset is not None:
         ref = ref[subset(ref)]
@@ -47,6 +48,8 @@ def pca_svg(pcs: pd.DataFrame, me: pd.Series, x: str, y: str, subset=None, label
     pts = []
     for _, r in ref.iterrows():
         cls = "pt hi" if highlight and r["super_pop"] == highlight else "pt"
+        if colors and r[label_by] in colors:
+            cls = f"pt c{colors[r[label_by]]}"
         pts.append(f'<circle class="{cls}" cx="{sx(r[x]):.1f}" cy="{sy(r[y]):.1f}" r="2.6" '
                    f'data-tip="{esc(r["IID"])}&#10;{esc(r["pop"])} · {esc(r["super_pop"])}"/>')
     mex, mey = sx(me[x]), sy(me[y])
@@ -95,10 +98,13 @@ def sec_ancestry(cfg, anc, pcs) -> str:
     body = '<div class="grid2">' + "".join(cards) + "</div>"
     if pcs is not None:
         me = pcs[pcs["IID"] == cfg["sample_id"]].iloc[0]
-        a = pca_svg(pcs, me, "PC1", "PC2", label_by="super_pop", highlight="EUR",
-                    title="All 2,504 samples, PC1 vs PC2 (Europeans in blue)")
+        sp_slot = {k: i + 1 for i, k in enumerate(["EUR", "SAS", "EAS", "AFR", "AMR"])}
+        eur = sorted(pcs.loc[pcs["super_pop"] == "EUR", "pop"].dropna().unique())
+        a = pca_svg(pcs, me, "PC1", "PC2", label_by="super_pop", colors=sp_slot,
+                    title="All 2,504 samples, PC1 vs PC2, coloured by superpopulation (as in the ADMIXTURE bar)")
         b = pca_svg(pcs, me, "PC1", "PC2", subset=lambda d: d["super_pop"] == "EUR", label_by="pop",
-                    title="Europeans only, PC1 vs PC2 (hover a label for the population)")
+                    colors={g: i + 1 for i, g in enumerate(eur)} if len(eur) <= 8 else None,
+                    title="Europeans only, PC1 vs PC2, coloured by population (hover a label for its name)")
         body += card("Principal components", f'<div class="grid2 svg-row">{a}{b}</div>',
                      "Each dot is one 1000 Genomes person; hover for details. Labels sit at each group's centre.")
     return section("ancestry", "Ancestry", "Where your genome sits among modern reference populations.", body)
